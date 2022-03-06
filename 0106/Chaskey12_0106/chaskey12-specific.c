@@ -1,0 +1,167 @@
+#include <stdio.h>
+
+#define ROTL32(x,b) (unsigned)( ((x) >> (32 - (b))) | ( (x) << (b)) )
+
+#define ROUND ({uint32_t a, b, c, d;\
+asm volatile ( "add.rol5.xor %[z], %[x], %[y]\n\t"\
+        : [z] "=r" (a)\
+        : [x] "r" (v[1]), [y] "r" (v[0]));\
+asm volatile ( "add.rol16 %[z], %[x], %[y]\n\t"\
+        : [z] "=r" (b)\
+        : [x] "r" (v[1]), [y] "r" (v[0]));\
+asm volatile ( "add %[z], %[x], %[y]\n\t"\
+        : [z] "=r" (c)\
+        : [x] "r" (v[3]), [y] "r" (v[2]));\
+asm volatile ( "add.rol8.xor %[z], %[x], %[y]\n\t"\
+        : [z] "=r" (d)\
+        : [x] "r" (v[3]), [y] "r" (v[2]));\
+asm volatile ( "add.rol7.xor %[z], %[x], %[y]\n\t"\
+        : [z] "=r" (v[1])\
+        : [x] "r" (a), [y] "r" (c));\
+asm volatile ( "add.rol16 %[z], %[x], %[y]\n\t"\
+        : [z] "=r" (v[2])\
+        : [x] "r" (a), [y] "r" (c));\
+asm volatile ( "add.rol13.xor %[z], %[x], %[y]\n\t"\
+        : [z] "=r" (v[3])\
+        : [x] "r" (d), [y] "r" (b));\
+asm volatile ( "add %[z], %[x], %[y]\n\t"\
+        : [z] "=r" (v[0])\
+        : [x] "r" (b), [y] "r" (d));})
+    
+#define PERMUTE \
+  ROUND; \
+  ROUND; \
+  ROUND; \
+  ROUND; \
+  ROUND; \
+  ROUND; \
+  ROUND; \
+  ROUND; \
+  ROUND; \
+  ROUND; \
+  ROUND; \
+  ROUND;
+
+#define length 16
+
+#define read_csr(reg) ({unsigned long __tmp;\
+asm volatile ("csrr %0, " #reg : "=r"(__tmp));\
+__tmp;})
+
+//const volatile unsigned C[2] = { 0x00, 0x87 };
+
+//#define TIMESTWO(out,in) \
+//  do { \
+//    out[0] = (in[0] << 1) ^ C[in[3] >> 31]; \
+//    out[1] = (in[1] << 1) | (in[0] >> 31); \
+//    out[2] = (in[2] << 1) | (in[1] >> 31); \
+//    out[3] = (in[3] << 1) | (in[2] >> 31); \
+//  } while(0)
+    
+unsigned main() {
+    
+    long inst1, inst2;
+
+	unsigned k[4] =  {0x33221100,0x77665544,0xbbaa9988,0xffeeddcc};
+
+
+
+	unsigned k1[4] = {0x66442287,0xeeccaa88,0x77553310,0xffddbb99}; 
+
+
+	  //unsigned k2[4]=  {0x33221102,
+	  //                  0x77665546,
+	  //                  0xbbaa9980,
+	  //                  0xffeeddce };
+
+	unsigned v[4];
+
+	unsigned m[length] ={
+		0x03020100,0x07060504,0x0b0a0908,0x0f0e0d0c,
+		0x13121110,0x17161514,0x1b1a1918,0x1f1e1d1c,
+		0x03020100,0x07060504,0x0b0a0908,0x0f0e0d0c,
+		0x13121110,0x17161514,0x1b1a1918,0x1f1e1d1c
+
+	};
+ 
+  //TIMESTWO(k1,k);
+  //TIMESTWO(k2,k1);
+    
+ 
+  v[0] = k[0];
+  v[1] = k[1];
+  v[2] = k[2];
+  v[3] = k[3];
+
+inst1 = read_csr(instret); // start
+
+for (int i = 0; i < length-4; i+=4){
+
+   v[0] ^= m[i];
+   v[1] ^= m[i+1];
+   v[2] ^= m[i+2];
+   v[3] ^= m[i+3];
+   
+   PERMUTE;
+
+}
+inst2 = read_csr(instret); // end
+
+printf("instructions: %ld\n", inst2 - inst1);
+
+
+  v[0] ^= m[length-4];
+  v[1] ^= m[length-3];
+  v[2] ^= m[length-2];
+  v[3] ^= m[length-1];
+
+
+
+
+  v[0] ^= k1[0];
+  v[1] ^= k1[1];
+  v[2] ^= k1[2];
+  v[3] ^= k1[3];
+
+
+/*
+printf("before PERMUTE2\n");
+for (int i = 0; i < 4; i++) {
+
+   printf("%08x ",k1[i]);
+   //printf("%08x ",k1[i]);
+   printf("%d\n",i);
+
+}
+   printf("\n");
+*/
+
+
+PERMUTE;
+
+/*
+printf("PERMUTE2\n");
+for (int i = 0; i < 4; i++) {
+
+   printf("%08x ",v[i]);
+   //printf("%08x ",k1[i]);
+   printf("%d\n",i);
+
+}
+   printf("\n");
+*/
+  v[0] ^= k1[0];
+  v[1] ^= k1[1];
+  v[2] ^= k1[2];
+  v[3] ^= k1[3];
+
+  for (int i = 0; i < 4; i++) {
+
+     printf("%08x ",v[i]);
+     //printf("%08x ",k1[i]);
+     printf("%d\n",i);
+
+  }
+
+  return v[4];
+}

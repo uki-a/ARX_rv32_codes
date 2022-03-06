@@ -1,0 +1,22 @@
+/*root@affa35580b2f:/work/riscv-isa-sim/riscv/insns# cat rol16_xor.h && cat rol13_xor.h && cat rol12_xor.h && cat rol8_xor.h && cat rol7_xor.h && cat rol5_xor.h && cat rol3_xor.h  */ 
+int shamt = 16 & (xlen-1);
+int rshamt = -shamt & (xlen-1);
+WRITE_RD( sext_xlen((RS1 << shamt) | (zext_xlen(RS1) >> rshamt)) ^ sext_xlen(RS2) );
+int shamt = 13 & (xlen-1);
+int rshamt = -shamt & (xlen-1);
+WRITE_RD( sext_xlen((RS1 << shamt) | (zext_xlen(RS1) >> rshamt)) ^ sext_xlen(RS2) );
+int shamt = 12 & (xlen-1);
+int rshamt = -shamt & (xlen-1);
+WRITE_RD( sext_xlen((RS1 << shamt) | (zext_xlen(RS1) >> rshamt)) ^ sext_xlen(RS2) );
+int shamt = 8 & (xlen-1);
+int rshamt = -shamt & (xlen-1);
+WRITE_RD( sext_xlen((RS1 << shamt) | (zext_xlen(RS1) >> rshamt)) ^ sext_xlen(RS2) );
+int shamt = 7 & (xlen-1);
+int rshamt = -shamt & (xlen-1);
+WRITE_RD( sext_xlen((RS1 << shamt) | (zext_xlen(RS1) >> rshamt)) ^ sext_xlen(RS2) );
+int shamt = 5 & (xlen-1);
+int rshamt = -shamt & (xlen-1);
+WRITE_RD( sext_xlen((RS1 << shamt) | (zext_xlen(RS1) >> rshamt)) ^ sext_xlen(RS2) );
+int shamt = 3 & (xlen-1);
+int rshamt = -shamt & (xlen-1);
+WRITE_RD( sext_xlen((RS1 << shamt) | (zext_xlen(RS1) >> rshamt)) ^ sext_xlen(RS2) );
